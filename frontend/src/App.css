@@ -227,6 +227,16 @@ button.mode-end.active {
   box-shadow: 0 0 5px #9c27b0;
 }
 
+.dot.p1Start {
+  background-color: #4caf50;
+  box-shadow: 0 0 5px #4caf50;
+}
+
+.dot.p2Start {
+  background-color: #ff9800;
+  box-shadow: 0 0 5px #ff9800;
+}
+
 /* Status highlighting when game ends */
 .status.winner-bright {
   color: #fff;

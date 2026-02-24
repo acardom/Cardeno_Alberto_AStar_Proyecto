@@ -7,6 +7,10 @@ const Cell = ({ row, col, type, pathIndex, onClick }) => {
       case 1: return 'cell obstacle';
       case 'myStart': return 'cell myStart';
       case 'oppEnd': return 'cell oppEnd';
+      case 'p1Start': return 'cell p1Start';
+      case 'p1End': return 'cell p1End';
+      case 'p2Start': return 'cell p2Start';
+      case 'p2End': return 'cell p2End';
       case 'path': return 'cell path';
       case 'oppPath': return 'cell oppPath';
       case 'restricted': return 'cell restricted';

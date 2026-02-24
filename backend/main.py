@@ -123,7 +123,12 @@ def on_player_ready(data):
 
                 emit('game_result', {
                     'results': results,
-                    'winner': winner
+                    'winner': winner,
+                    'fullGrid': full_grid,
+                    'p1Start': p1['my_start'],
+                    'p1End': p2['opp_end'],
+                    'p2Start': p2['my_start'],
+                    'p2End': p1['opp_end']
                 }, room=room)
                 
                 for p in players.values():

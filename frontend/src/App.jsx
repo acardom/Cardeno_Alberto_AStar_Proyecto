@@ -21,6 +21,13 @@ function App() {
   const [myPath, setMyPath] = useState([]);
   const [opponentPath, setOpponentPath] = useState([]);
   const [winner, setWinner] = useState(null);
+
+  // Posiciones completas reveladas por el servidor al final
+  const [p1Start, setP1Start] = useState(null);
+  const [p1End, setP1End] = useState(null);
+  const [p2Start, setP2Start] = useState(null);
+  const [p2End, setP2End] = useState(null);
+
   const [mode, setMode] = useState('wall');
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState('Coloca tu inicio, el fin del rival y tus muros');
@@ -60,7 +67,6 @@ function App() {
     });
 
     socket.on('game_result', (data) => {
-      // Identificar mi resultado y el del rival de forma limpia
       const p1 = data.results.p1;
       const p2 = data.results.p2;
       const me = p1.name === username ? p1 : p2;
@@ -69,6 +75,14 @@ function App() {
       setMyPath(me.path || []);
       setOpponentPath(them.path || []);
       setWinner(data.winner);
+
+      // Revelar todo el mapa
+      setGrid(data.fullGrid);
+      setP1Start(data.p1Start);
+      setP1End(data.p1End);
+      setP2Start(data.p2Start);
+      setP2End(data.p2End);
+
       setStatus(
         data.winner === username
           ? '🏆 ¡HAS GANADO!'
@@ -136,9 +150,56 @@ function App() {
     setGrid(newGrid);
   };
 
+  const checkPathToMidline = (startPos, currentGrid, isSide0) => {
+    if (!startPos) return false;
+    const queue = [startPos];
+    const visited = new Set();
+    visited.add(`${startPos[0]}-${startPos[1]}`);
+
+    while (queue.length > 0) {
+      const [r, c] = queue.shift();
+
+      // Condición de éxito: alcanzar la línea media
+      // Si soy Side 0 (izquierda), la línea media es la columna 9 -> 10
+      // Si soy Side 1 (derecha), la línea media es la columna 10 -> 9
+      if (isSide0 && c === 9) return true;
+      if (!isSide0 && c === 10) return true;
+
+      const neighbors = [
+        [r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1], // Cardinales
+        [r - 1, c - 1], [r - 1, c + 1], [r + 1, c - 1], [r + 1, c + 1] // Diagonales
+      ];
+
+      for (const [nr, nc] of neighbors) {
+        if (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+          // Solo buscar en mi mitad
+          const isMyHalf = isSide0 ? nc < 10 : nc >= 10;
+          const key = `${nr}-${nc}`;
+          if (isMyHalf && currentGrid[nr][nc] === 0 && !visited.has(key)) {
+            visited.add(key);
+            queue.push([nr, nc]);
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   const handleReady = () => {
     if (!myStart) { alert('¡Pon tu punto de inicio primero!'); return; }
     if (!oppEnd) { alert('¡Pon el punto final del rival primero!'); return; }
+
+    // Validación de bloqueo
+    const isSide0 = side === 0;
+    const canStartReachMid = checkPathToMidline(myStart, grid, isSide0);
+    const canEndReachMid = checkPathToMidline(oppEnd, grid, isSide0);
+
+    if (!canStartReachMid || !canEndReachMid) {
+      const blocked = !canStartReachMid ? 'Tu punto de inicio' : 'El destino del rival';
+      alert(`⚠️ ¡Error! ${blocked} está bloqueado por muros. Debes dejar un camino libre hacia el centro del tablero.`);
+      return;
+    }
+
     setReady(true);
     setStatus('Listo! Esperando al rival...');
     socket.emit('player_ready', { room, grid, myStart, oppEnd });
@@ -148,6 +209,10 @@ function App() {
     setGrid(createEmptyGrid());
     setMyStart(null);
     setOppEnd(null);
+    setP1Start(null);
+    setP1End(null);
+    setP2Start(null);
+    setP2End(null);
     setMyPath([]);
     setOpponentPath([]);
     setWinner(null);
@@ -222,13 +287,19 @@ function App() {
         <div className="legend">
           <div className="legend-item"><span className="dot myPath"></span> Tu camino</div>
           <div className="legend-item"><span className="dot oppPath"></span> Camino rival</div>
+          {winner && (
+            <>
+              <div className="legend-item"><span className="dot p1Start"></span> Inicio P1</div>
+              <div className="legend-item"><span className="dot p2Start"></span> Inicio P2</div>
+            </>
+          )}
         </div>
 
         <div className="mode-hint">
           {mode === 'myStart' && !winner && <span>🟢 Haz click en tu mitad para colocar tu punto de inicio</span>}
           {mode === 'oppEnd' && !winner && <span>🔴 Haz click en tu mitad para definir el destino del rival</span>}
           {mode === 'wall' && !winner && <span>🧱 Haz click para colocar/quitar muros en tu mitad</span>}
-          {winner && <span>🏁 ¡Partida terminada! Puedes ver ambos recorridos en el mapa.</span>}
+          {winner && <span>🏁 ¡Partida terminada! Puedes ver todos los obstáculos y puntos especiales.</span>}
         </div>
 
         <div className="board-container">
@@ -238,6 +309,10 @@ function App() {
               grid={grid}
               myStart={myStart}
               oppEnd={oppEnd}
+              p1Start={p1Start}
+              p1End={p1End}
+              p2Start={p2Start}
+              p2End={p2End}
               path={myPath}
               opponentPath={opponentPath}
               side={side}

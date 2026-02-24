@@ -17,20 +17,38 @@
     border-color: #b71c1c;
 }
 
-/* Mi punto de inicio — círculo verde */
-.cell.myStart {
+/* Mi punto de inicio o P1 Start — círculo verde */
+.cell.myStart,
+.cell.p1Start {
     background-color: #4caf50;
     border-radius: 50%;
     transform: scale(0.85);
     box-shadow: 0 0 6px #4caf50;
 }
 
-/* Punto final del rival — triángulo rojo */
-.cell.oppEnd {
-    background-color: #e53935;
+/* Punto final del rival o P2 Start — círculo naranja */
+.cell.p2Start {
+    background-color: #ff9800;
+    border-radius: 50%;
+    transform: scale(0.85);
+    box-shadow: 0 0 6px #ff9800;
+}
+
+/* Punto final del rival o P2 End (el que yo puse) — triángulo azul */
+.cell.oppEnd,
+.cell.p2End {
+    background-color: #2196f3;
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
     transform: scale(0.85);
-    box-shadow: 0 0 6px #e53935;
+    box-shadow: 0 0 6px #2196f3;
+}
+
+/* P1 End (el que puso el rival) — triángulo rojo */
+.cell.p1End {
+    background-color: #f44336;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    transform: scale(0.85);
+    box-shadow: 0 0 6px #f44336;
 }
 
 /* Camino A* del Jugador Local (Amarillo) */
