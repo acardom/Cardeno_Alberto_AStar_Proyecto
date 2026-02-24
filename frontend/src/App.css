@@ -167,3 +167,95 @@ button.active {
 strong {
   color: #ffeb3b;
 }
+
+/* Mode buttons */
+button.mode-start.active {
+  background-color: #4caf50;
+  box-shadow: 0 0 14px rgba(76, 175, 80, 0.5);
+}
+
+button.mode-end.active {
+  background-color: #e53935;
+  box-shadow: 0 0 14px rgba(229, 57, 53, 0.5);
+}
+
+/* Mode hint bar */
+.mode-hint {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #aaa;
+  padding: 0.4rem 0;
+  min-height: 1.4rem;
+}
+
+/* Half label in board title */
+.half-label {
+  font-size: 0.85rem;
+  color: #888;
+  font-weight: normal;
+}
+
+/* Legend for paths */
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: -1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot.myPath {
+  background-color: #ffeb3b;
+  box-shadow: 0 0 5px #ffeb3b;
+}
+
+.dot.oppPath {
+  background-color: #9c27b0;
+  box-shadow: 0 0 5px #9c27b0;
+}
+
+/* Status highlighting when game ends */
+.status.winner-bright {
+  color: #fff;
+  font-size: 1.5rem;
+  text-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+  font-weight: bold;
+  animation: winnerPulse 1s infinite alternate;
+}
+
+@keyframes winnerPulse {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.05);
+  }
+}
+
+/* Non-intrusive Play Again button */
+.play-again-btn {
+  margin-top: 1rem;
+  background: linear-gradient(45deg, #4caf50, #2196f3);
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 162, 255, 0.3);
+}
+
+.play-again-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 162, 255, 0.5);
+}
