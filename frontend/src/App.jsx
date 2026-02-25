@@ -3,13 +3,11 @@ import io from 'socket.io-client';
 import Board from './components/Board';
 import './App.css';
 
-const SOCKET_URL = process.env.NODE_ENV === 'production' 
-  ? process.env.REACT_APP_BACKEND_URL 
-  : 'http://localhost:5000';
+const SOCKET_URL = process.env.NODE_ENV === 'production' ? process.env.REACT_APP_BACKEND_URL : 'http://localhost:5000';
 
 const socket = io(SOCKET_URL);
-const GRID_SIZE = 20;
-const MAX_WALLS = 15;
+const GRID_SIZE = Number(process.env.REACT_APP_GRID_SIZE || 20);
+const MAX_WALLS = Number(process.env.REACT_APP_MAX_WALLS || 15);
 
 const createEmptyGrid = () => Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(0));
 

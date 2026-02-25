@@ -8,16 +8,26 @@ from flask import Flask, request
 from flask_socketio import SocketIO, emit, join_room
 from logic.astar import a_star
 import os
+from dotenv import load_dotenv
+
+# Cargamos el archivo .env para leer la configuración
+load_dotenv()
 
 # CONFIGURACIÓN INICIAL
 
 app = Flask(__name__)
 
-# La SECRET_KEY es como una contraseña maestra para que el servidor sea seguro.
-app.config['SECRET_KEY'] = 'secret!'
+# La SECRET_KEY es como una contraseña maestra para que el servidor sea seguro. 
+# La leemos del .env para no dejarla escrita en el código.
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'secret!')
 
 # SocketIO es lo que permite que el servidor y el jugador hablen.
-socketio = SocketIO(app, cors_allowed_origins="*")
+# El origen (CORS) también lo leemos del .env.
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '*')
+socketio = SocketIO(app, cors_allowed_origins=allowed_origins)
+
+# GAME CONSTANTS (Configurables desde .env)
+GRID_HALF_SIZE = int(os.getenv('GRID_HALF_SIZE', 10))
 
 # ==========================
 # EL ARCHIVADOR (La memoria)
@@ -77,23 +87,44 @@ def on_join(data):
         emit('error', {'message': 'Sala llena'})
 
 # Gestionar desconexión (importante para limpiar la memoria)
+# Esto salta solo cuando un jugador pierde la conexión
 @socketio.on('disconnect')
 def on_disconnect():
+    # 'sid' id único del jugador
     sid = request.sid
+    
+    # Variable para borrar la sala si se queda vacía
     room_to_delete = None
+    
+    # 1. BUSCAR AL JUGADOR: Vamos sala por sala
+    # Usamos list(rooms.items()) 
     for room_id, data in list(rooms.items()):
+        
+        # ¿Está este jugador en esta sala?
         if sid in data['players']:
             player_name = data['players'][sid]['name']
+            
+            # ¡Lo encontramos! Ahora lo borramos de la ficha de la sala
             del data['players'][sid]
+            print(f"El jugador {player_name} se ha ido.")
+
+            # Esta la sala vacía?
             if len(data['players']) == 0:
+                # Si no queda nadie decimos que esta vacía
                 room_to_delete = room_id
             else:
+                # Si todavía queda otro jugador, le avisamos
                 emit('player_left', {'name': player_name}, room=room_id)
+            
+            # Como ya lo encontramos, dejamos de buscar en otras salas
             break
     
+    # Si la sala se quedó vacía, la borramos del archivador global
     if room_to_delete in rooms:
         del rooms[room_to_delete]
+        print(f"Sala {room_to_delete} borrada porque no queda nadie.")
     
+    # Actualizamos la lista de salas
     on_get_rooms()
 
 # ====================================
@@ -130,7 +161,8 @@ def on_player_ready(data):
                 # Juntamos los dos mapas en uno solo (el mapa completo del juego)
                 full_grid = []
                 for r in range(len(p1['grid'])):
-                    row = p1['grid'][r][:10] + p2['grid'][r][10:]
+                    # Usamos el GRID_HALF_SIZE configurable
+                    row = p1['grid'][r][:GRID_HALF_SIZE] + p2['grid'][r][GRID_HALF_SIZE:]
                     full_grid.append(row)
                 
                 # Le pedimos al algoritmo "A*" que busque el camino más corto
@@ -170,5 +202,7 @@ def on_player_ready(data):
 
 # EL ARRANQUE
 if __name__ == '__main__':
+    # Esto busca un puerto libre (como un canal de TV) para emitir el juego.
+    # Por defecto es el 5000, o lo que diga el entorno/Render.
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, debug=False, host='0.0.0.0', port=port)
