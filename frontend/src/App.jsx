@@ -3,7 +3,11 @@ import io from 'socket.io-client';
 import Board from './components/Board';
 import './App.css';
 
-const socket = io('http://localhost:5000');
+const SOCKET_URL = process.env.NODE_ENV === 'production' 
+  ? process.env.REACT_APP_BACKEND_URL 
+  : 'http://localhost:5000';
+
+const socket = io(SOCKET_URL);
 const GRID_SIZE = 20;
 const MAX_WALLS = 15;
 
