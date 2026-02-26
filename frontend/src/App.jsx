@@ -56,11 +56,16 @@ function App() {
 
     socket.on('side_assignment', (data) => {
       setSide(data.side);
+      if (data.opponentName) setOpponentName(data.opponentName);
       setIsJoined(true);
     });
 
     socket.on('player_joined', (data) => {
-      if (data.name !== username) setOpponentName(data.name);
+      // data.names ahora trae los nombres actuales de la sala
+      if (data.names) {
+        const opponent = data.names.find(n => n !== username);
+        if (opponent) setOpponentName(opponent);
+      }
       setStatus(`Jugadores en sala: ${data.count}/2`);
     });
 
@@ -207,21 +212,10 @@ function App() {
     socket.emit('player_ready', { room, grid, myStart, oppEnd });
   };
 
-  const resetGame = () => {
-    setGrid(createEmptyGrid());
-    setMyStart(null);
-    setOppEnd(null);
-    setP1Start(null);
-    setP1End(null);
-    setP2Start(null);
-    setP2End(null);
-    setMyPath([]);
-    setOpponentPath([]);
-    setWinner(null);
-    setReady(false);
-    setWallCount(0);
-    setStatus('Coloca tu inicio, el fin del rival y tus muros');
-    setMode('wall');
+  const backToLobby = () => {
+    // La forma más limpia de salir: recargar la web.
+    // Esto cierra el socket automáticamente y el servidor borra la sala.
+    window.location.reload();
   };
 
   if (!isJoined) {
@@ -274,7 +268,7 @@ function App() {
           <span className={side === 1 ? 'me' : ''}>{side === 1 ? username : opponentName}</span>
         </div>
         <p className={`status ${winner ? 'winner-bright' : ''}`}>{status}</p>
-        {winner && <button className="play-again-btn" onClick={resetGame}>🔄 Nueva Partida</button>}
+        {winner && <button className="play-again-btn" onClick={backToLobby}>� Volver al Inicio</button>}
       </header>
 
       <main className="game-area">

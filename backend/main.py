@@ -43,12 +43,17 @@ rooms = {}
 @socketio.on('get_rooms')
 def on_get_rooms():
     room_list = []
-    # Miramos en nuestro archivador y hacemos una lista de las salas
+    # Función para enviar la lista de salas a todos
     for room_id, data in rooms.items():
-        room_list.append({
-            'name': room_id,
-            'players': len(data['players'])
-        })
+        num_players = len(data['players'])
+        # REGLA SENCILLA:
+        # 1. Si está vacía, no se muestra (y debería borrarse)
+        # 2. Si está llena (2 personas), no la mostramos para evitar líos
+        if 0 < num_players < 2:
+            room_list.append({
+                'name': room_id,
+                'players': num_players
+            })
     # Enviamos la lista de salas
     emit('room_list', room_list, broadcast=True)
 
@@ -77,9 +82,17 @@ def on_join(data):
             'side': player_index 
         }
         
-        # Avisamos a la sala de que alguien se ha unido
-        emit('player_joined', {'count': len(rooms[room]['players']), 'side': player_index, 'name': name}, room=room)
-        # Le decimos al jugador qué lado le corresponde
+        # Preparamos la lista de nombres de todos los que están dentro
+        all_names = [p['name'] for p in rooms[room]['players'].values()]
+
+        # Avisamos a toda la sala (incluido el nuevo) con la lista completa
+        emit('player_joined', {
+            'count': len(rooms[room]['players']), 
+            'names': all_names,
+            'name': name # Quién acaba de entrar
+        }, room=room)
+        
+        # Le decimos al jugador nuevo solo su lado
         emit('side_assignment', {'side': player_index}, room=request.sid)
         on_get_rooms() 
     else:
@@ -96,7 +109,7 @@ def on_disconnect():
     # Variable para borrar la sala si se queda vacía
     room_to_delete = None
     
-    # 1. BUSCAR AL JUGADOR: Vamos sala por sala
+    # BUSCAR AL JUGADOR: Vamos sala por sala
     # Usamos list(rooms.items()) 
     for room_id, data in list(rooms.items()):
         
